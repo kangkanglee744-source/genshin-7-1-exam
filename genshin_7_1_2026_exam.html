@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>原神 7.1｜2026年终考试</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; font-family:Arial,"Microsoft YaHei",sans-serif;
+  color:#fff; background:
+  radial-gradient(circle at 20% 10%,#536b8f55,transparent 30%),
+  radial-gradient(circle at 80% 80%,#8c6b4450,transparent 30%),
+  linear-gradient(135deg,#111827,#182335 55%,#0b1220);
+}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;
+ background-image:linear-gradient(#ffffff06 1px,transparent 1px),linear-gradient(90deg,#ffffff06 1px,transparent 1px);
+ background-size:40px 40px}
+.container{width:min(900px,92%);margin:auto;padding:55px 0}
+.card{
+ background:#101827eF;border:1px solid #ffffff20;border-radius:24px;
+ padding:35px;box-shadow:0 20px 70px #0008;backdrop-filter:blur(12px)
+}
+h1{font-size:clamp(30px,6vw,54px);margin:5px 0 12px;text-align:center}
+.subtitle{text-align:center;color:#b8c5d9;margin-bottom:35px}
+.gold{color:#e9c982}
+input{
+ width:100%;padding:16px 18px;border-radius:12px;border:1px solid #ffffff25;
+ background:#ffffff0d;color:#fff;font-size:17px;outline:none;margin:10px 0 20px
+}
+button{
+ border:0;border-radius:12px;padding:15px 24px;font-size:17px;cursor:pointer;
+ background:linear-gradient(135deg,#d8b36a,#9f7739);color:#17120b;font-weight:bold;
+ transition:.2s
+}
+button:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.center{text-align:center}
+.hidden{display:none}
+.progress{height:8px;background:#ffffff14;border-radius:20px;overflow:hidden;margin:0 0 28px}
+.progress-bar{height:100%;background:linear-gradient(90deg,#d8b36a,#f5df9d);width:0;transition:.3s}
+.question-num{color:#d8b36a;font-weight:bold}
+.question{font-size:25px;line-height:1.5;margin:12px 0 25px}
+.option{
+ display:block;width:100%;text-align:left;margin:12px 0;padding:16px 18px;
+ border:1px solid #ffffff20;background:#ffffff08;color:#fff;border-radius:13px;
+ cursor:pointer;font-size:16px
+}
+.option:hover{background:#ffffff12}
+.option.selected{border-color:#e2bd70;background:#e2bd7020}
+.nav{display:flex;justify-content:space-between;gap:12px;margin-top:28px}
+.nav button{min-width:120px}
+.score{font-size:64px;font-weight:bold;color:#e9c982;margin:15px 0}
+.badge{display:inline-block;padding:9px 16px;border-radius:99px;background:#e9c98222;color:#f1d898}
+.small{color:#9eabc0;font-size:14px;line-height:1.7}
+.review{margin-top:30px;text-align:left}
+.review-item{padding:15px;border-radius:12px;background:#ffffff08;margin:10px 0}
+.correct{border-left:4px solid #65c18c}
+.wrong{border-left:4px solid #d66b6b}
+</style>
+</head>
+<body>
+<div class="container">
+
+<section id="start" class="card">
+  <div class="center">
+    <div class="gold">GENSHIN IMPACT · VERSION 7.1</div>
+    <h1>2026 年终考试</h1>
+    <div class="subtitle">「原学家认证考试」</div>
+  </div>
+
+  <p>考生姓名</p>
+  <input id="name" maxlength="30" placeholder="请输入你的名字">
+  <p class="small">提示：请输入昵称或游戏名即可。考试完成后会显示你的成绩。</p>
+
+  <div class="center">
+    <button onclick="startExam()">开始考试</button>
+  </div>
+</section>
+
+<section id="exam" class="card hidden">
+  <div class="progress"><div id="bar" class="progress-bar"></div></div>
+  <div class="question-num" id="questionNum"></div>
+  <div class="question" id="question"></div>
+  <div id="options"></div>
+  <div class="nav">
+    <button id="prevBtn" onclick="prevQuestion()">上一题</button>
+    <button id="nextBtn" onclick="nextQuestion()">下一题</button>
+  </div>
+</section>
+
+<section id="result" class="card hidden center">
+  <div class="gold">2026 年终考试成绩单</div>
+  <h1 id="resultName"></h1>
+  <div class="score" id="score"></div>
+  <div id="badge" class="badge"></div>
+  <p id="comment" style="font-size:18px;margin:25px 0"></p>
+  <button onclick="showReview()">查看答案</button>
+  <button onclick="location.reload()" style="margin-left:8px;background:#ffffff15;color:#fff">重新考试</button>
+  <div id="review" class="review hidden"></div>
+</section>
+
+</div>
+
+<script>
+// =====================================================
+// 👇 你以后主要修改这里：考试题目
+// answer 使用 0=A、1=B、2=C、3=D
+// =====================================================
+const questions = [
+  {
+    q:"【示例题】旅行者在提瓦特大陆上的身份是什么？",
+    options:["冒险家协会会长","旅行者","骑士团团长","七神"],
+    answer:1
+  },
+  {
+    q:"【示例题】原神中的元素类型共有多少种？",
+    options:["5种","6种","7种","8种"],
+    answer:2
+  },
+  {
+    q:"【示例题】以下哪一个属于元素？",
+    options:["火元素","光元素","暗元素","木元素"],
+    answer:0
+  },
+  {
+    q:"【示例题】你认为自己能在本次考试拿多少分？",
+    options:["60分以下","60–79分","80–99分","100分！"],
+    answer:3
+  },
+  {
+    q:"【示例题】你准备好挑战真正的原学家考试了吗？",
+    options:["准备好了","完全没准备","我只是来试试","我是原学家"],
+    answer:3
+  }
+];
+// =====================================================
+
+let current=0;
+let selected=[];
+let studentName="";
+
+function startExam(){
+  const n=document.getElementById("name").value.trim();
+  if(!n){alert("请先输入名字！");return;}
+  studentName=n;
+  selected=new Array(questions.length).fill(null);
+  current=0;
+  document.getElementById("start").classList.add("hidden");
+  document.getElementById("exam").classList.remove("hidden");
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q=questions[current];
+  document.getElementById("questionNum").textContent=
+    `第 ${current+1} / ${questions.length} 题`;
+  document.getElementById("question").textContent=q.q;
+
+  const box=document.getElementById("options");
+  box.innerHTML="";
+  q.options.forEach((op,i)=>{
+    const b=document.createElement("button");
+    b.className="option"+(selected[current]===i?" selected":"");
+    b.textContent=String.fromCharCode(65+i)+"．"+op;
+    b.onclick=()=>{selected[current]=i;renderQuestion()};
+    box.appendChild(b);
+  });
+
+  document.getElementById("prevBtn").disabled=current===0;
+  document.getElementById("nextBtn").textContent=
+    current===questions.length-1?"提交考试":"下一题";
+  document.getElementById("bar").style.width=
+    `${((current+1)/questions.length)*100}%`;
+}
+
+function prevQuestion(){
+  if(current>0){current--;renderQuestion();}
+}
+
+function nextQuestion(){
+  if(selected[current]===null){
+    alert("请选择一个答案！");
+    return;
+  }
+  if(current<questions.length-1){
+    current++;renderQuestion();
+  }else{
+    finishExam();
+  }
+}
+
+function finishExam(){
+  let score=0;
+  questions.forEach((q,i)=>{if(selected[i]===q.answer)score++;});
+
+  document.getElementById("exam").classList.add("hidden");
+  document.getElementById("result").classList.remove("hidden");
+
+  const percent=Math.round(score/questions.length*100);
+  document.getElementById("resultName").textContent=studentName;
+  document.getElementById("score").textContent=`${score} / ${questions.length}`;
+
+  let badge,comment;
+  if(percent===100){
+    badge="👑 原学家·满分神";
+    comment="提瓦特的知识已经无法难倒你。";
+  }else if(percent>=80){
+    badge="⭐ 高阶旅行者";
+    comment="你的原神知识相当扎实。";
+  }else if(percent>=60){
+    badge="📚 合格旅行者";
+    comment="继续旅行，你会知道更多。";
+  }else{
+    badge="🌱 新人旅行者";
+    comment="别急，重新旅行一次吧。";
+  }
+  document.getElementById("badge").textContent=badge;
+  document.getElementById("comment").textContent=comment;
+}
+
+function showReview(){
+  const box=document.getElementById("review");
+  box.classList.toggle("hidden");
+  if(!box.classList.contains("hidden")){
+    box.innerHTML="<h2>答题回顾</h2>";
+    questions.forEach((q,i)=>{
+      const ok=selected[i]===q.answer;
+      const div=document.createElement("div");
+      div.className="review-item "+(ok?"correct":"wrong");
+      div.innerHTML=
+        `<b>第${i+1}题 ${ok?"✓ 正确":"✗ 错误"}</b><br>
+         你的答案：${q.options[selected[i]] ?? "未作答"}<br>
+         正确答案：${q.options[q.answer]}`;
+      box.appendChild(div);
+    });
+  }
+}
+</script>
+</body>
+</html>
